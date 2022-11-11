@@ -1,5 +1,5 @@
 import {StatusBar} from 'expo-status-bar';
-import {StyleSheet, Text, View, Button, TouchableOpacity} from 'react-native';
+import {StyleSheet, Text, View, Button, TouchableOpacity, Modal} from 'react-native';
 import React, {useState, useEffect, useRef} from 'react';
 import * as Updates from "expo-updates";
 
@@ -8,6 +8,7 @@ export default function App() {
 
     const [yesCount, setYesCount] = useState(0);
     const [noCount, setNoCount] = useState(0);
+    const [modalVisible, setModalVisible] = useState(false);
 
     const socket = useRef(null);
 
@@ -98,7 +99,9 @@ export default function App() {
         socket.current.send(JSON.stringify(payload))
     }
 
+    const openGoalModal = () => {
 
+    }
     const handleCheckForUpdate = async () => {
         try {
             const update = await Updates.checkForUpdateAsync();
@@ -151,6 +154,26 @@ export default function App() {
                     alignItems: "center",
                     flexDirection: "row",
                 }}>
+                    <Button onPress={penGoalModal}>Set Goal</Button>
+                    <Modal
+                        animationType="slide"
+                        transparent={true}
+                        visible={modalVisible}
+                        onRequestClose={() => {
+                            Alert.alert('Modal has been closed.');
+                            setModalVisible(!modalVisible);
+                        }}>
+                        <View style={styles.centeredView}>
+                            <View style={styles.modalView}>
+                                <Text style={styles.modalText}>Hello World!</Text>
+                                <Pressable
+                                    style={[styles.button, styles.buttonClose]}
+                                    onPress={() => setModalVisible(!modalVisible)}>
+                                    <Text style={styles.textStyle}>Hide Modal</Text>
+                                </Pressable>
+                            </View>
+                        </View>
+                    </Modal>
                     <TouchableOpacity style={{marginHorizontal: 6}} onPress={() => handleCheckForUpdate()}>
                         <Text style={{color: "white"}} width={30} height={30}>Update</Text>
                     </TouchableOpacity>
@@ -171,5 +194,46 @@ const styles = StyleSheet.create({
         backgroundColor: '#fff',
         alignItems: 'center',
         justifyContent: 'center',
+    },
+    centeredView: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginTop: 22,
+    },
+    modalView: {
+        margin: 20,
+        backgroundColor: 'white',
+        borderRadius: 20,
+        padding: 35,
+        alignItems: 'center',
+        shadowColor: '#000',
+        shadowOffset: {
+            width: 0,
+            height: 2,
+        },
+        shadowOpacity: 0.25,
+        shadowRadius: 4,
+        elevation: 5,
+    },
+    button: {
+        borderRadius: 20,
+        padding: 10,
+        elevation: 2,
+    },
+    buttonOpen: {
+        backgroundColor: '#F194FF',
+    },
+    buttonClose: {
+        backgroundColor: '#2196F3',
+    },
+    textStyle: {
+        color: 'white',
+        fontWeight: 'bold',
+        textAlign: 'center',
+    },
+    modalText: {
+        marginBottom: 15,
+        textAlign: 'center',
     },
 });
