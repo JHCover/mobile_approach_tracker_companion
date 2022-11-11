@@ -124,7 +124,7 @@ export default function App() {
                 alignItems: 'center',
                 flexDirection: 'column'
             }}>
-                <Text>Elite Marketing Stat Tracker</Text>
+                <Text style={{marginTop: 36}}>Elite Marketing Stat Tracker</Text>
                 <View style={{
                     flex: 1,
                     margin: 15,
@@ -187,6 +187,7 @@ export default function App() {
                         padding: 7,
                     }}>{Updates.updateId}</Text>
                 </View>
+            <Text>{Updates.releaseChannel}</Text>
         </View>
     );
 }
