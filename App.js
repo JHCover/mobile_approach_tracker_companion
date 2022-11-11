@@ -124,6 +124,7 @@ export default function App() {
                 alignItems: 'center',
                 flexDirection: 'column'
             }}>
+                <Text>Elite Marketing Stat Tracker</Text>
                 <View style={{
                     flex: 1,
                     margin: 15,
