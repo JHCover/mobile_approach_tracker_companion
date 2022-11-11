@@ -96,6 +96,16 @@ class RuntimeScheduler final {
    */
   RuntimeSchedulerTimePoint now() const noexcept;
 
+  /*
+   * Expired task is a task that should have been already executed. Designed to
+   * be called in the event pipeline after an event is dispatched to React.
+   * React may schedule events with immediate priority which need to be handled
+   * before the next event is sent to React.
+   *
+   * Thread synchronization must be enforced externally.
+   */
+  void callExpiredTasks(jsi::Runtime &runtime);
+
  private:
   mutable std::priority_queue<
       std::shared_ptr<Task>,
@@ -105,7 +115,12 @@ class RuntimeScheduler final {
 
   RuntimeExecutor const runtimeExecutor_;
   mutable SchedulerPriority currentPriority_{SchedulerPriority::NormalPriority};
-  mutable std::atomic_bool shouldYield_{false};
+
+  /*
+   * Counter indicating how many access to the runtime have been requested.
+   */
+  mutable std::atomic<uint_fast8_t> runtimeAccessRequests_{0};
+
   mutable std::atomic_bool isSynchronous_{false};
 
   void startWorkLoop(jsi::Runtime &runtime) const;

@@ -1,5 +1,5 @@
 import {StatusBar} from 'expo-status-bar';
-import {StyleSheet, Text, View, Button, TouchableOpacity, Modal} from 'react-native';
+import {StyleSheet, Text, Button, TouchableOpacity, Alert, Modal, Pressable, View} from 'react-native';
 import React, {useState, useEffect, useRef} from 'react';
 import * as Updates from "expo-updates";
 
@@ -147,6 +147,9 @@ export default function App() {
                 <Text>Number of Yes's: {yesCount}</Text>
                 <Text>Number of No's: {noCount}</Text>
             </View>
+            <Pressable style={[styles.button, styles.buttonOpen]} onPress={() => setModalVisible(true)}>
+                <Text style={styles.textStyle}>Show Modal</Text>
+            </Pressable>
                 <View style={{
                     width: '100%',
                     height: 35,
@@ -154,7 +157,6 @@ export default function App() {
                     alignItems: "center",
                     flexDirection: "row",
                 }}>
-                    <Button onPress={penGoalModal}>Set Goal</Button>
                     <Modal
                         animationType="slide"
                         transparent={true}
