@@ -1,0 +1,21 @@
+{
+  "cli": {
+    "version": ">= 2.2.1"
+  },
+  "build": {
+    "development": {
+      "releaseChannel": "development",
+      "distribution": "internal",
+      "env": {
+        "APP_VARIANT": "development"
+      }
+    },
+    "preview": {
+      "distribution": "internal"
+    },
+    "production": {}
+  },
+  "submit": {
+    "production": {}
+  }
+}
