@@ -1,5 +1,5 @@
 import {StatusBar} from 'expo-status-bar';
-import {StyleSheet, Text, Button, TouchableOpacity, Alert, Modal, Pressable, View} from 'react-native';
+import {StyleSheet, Text, Button, TouchableOpacity, Alert, Modal, Pressable, View, Switch,  SafeAreaView, TextInput} from 'react-native';
 import React, {useState, useEffect, useRef} from 'react';
 import * as Updates from "expo-updates";
 
@@ -9,6 +9,21 @@ export default function App() {
     const [yesCount, setYesCount] = useState(0);
     const [noCount, setNoCount] = useState(0);
     const [modalVisible, setModalVisible] = useState(false);
+    const [noGoal, setNoGoal] = useState(0)
+    const [yesGoal, setYesGoal] = useState(0)
+
+    const [newYesGoal, setNewYesGoal] = useState(0)
+    const [newNoGoal, setNewNoHoal] = useState(0)
+
+    const [yesGoalCount, setYesGoalCount] = useState(0)
+    const [noGoalCount, setNoGoalCount] = useState(0)
+
+    const [isEnabled, setIsEnabled] = useState(false);
+    const toggleSwitch = () => setIsEnabled(previousState => !previousState);
+
+    const [streamGoalActive, setStreamGoalActive] = useState(false)
+
+    const [number, onChangeNumber] = React.useState(null);
 
     const socket = useRef(null);
 
@@ -30,6 +45,15 @@ export default function App() {
             console.log(`number of yes's:`, message.yesCount)
             setYesCount(message.yesCount)
             setNoCount(message.noCount)
+
+            // Set stream goal stats
+            if (message.streamGoal) {
+                setStreamGoalActive(message.streamGoal.streamGoalActive)
+                setNoGoal(message.streamGoal.noGoal)
+                setYesGoal(message.streamGoal.yesGoal)
+                setNoGoalCount(message.streamGoal.noGoalCount)
+                setYesGoalCount(message.streamGoal.yesGoalCount)
+            }
         })
 
         return () => {
@@ -61,6 +85,42 @@ export default function App() {
 
     }
 
+    const changeStreamGoals = (newNoGoal, newYesGoal) => {
+        const payload = {
+            action: 'message',
+            type: 'setStreamGoalCounts',
+            streamGoal: {
+                newNoGoal,
+                newYesGoal,
+            }
+        }
+        socket.current.send(JSON.stringify(payload))
+    }
+
+    const changeStreamGoalCounts = (newNoGoalCount, newYesGoalCount) => {
+        const payload = {
+            action: 'message',
+            type: 'resetStreamGoalCounts',
+            streamGoal: {
+                streamGoalActive,
+                newNoGoalCount,
+                newYesGoalCount,
+            }
+        }
+        socket.current.send(JSON.stringify(payload))
+    }
+
+    const changeStreamGoalActive = () => {
+        const payload = {
+            action: 'message',
+            type: 'setStreamGoalActive',
+            streamGoal: {
+                streamGoalActive,
+            }
+        }
+        socket.current.send(JSON.stringify(payload))
+    }
+
     const addYesButtonPress = async () => {
         console.log("yesButton")
         const payload = {
@@ -89,7 +149,6 @@ export default function App() {
         socket.current.send(JSON.stringify(payload))
     }
 
-
     const minusNoButtonPress = () => {
         console.log("decreaseMinusButton")
         const payload = {
@@ -99,9 +158,6 @@ export default function App() {
         socket.current.send(JSON.stringify(payload))
     }
 
-    const openGoalModal = () => {
-
-    }
     const handleCheckForUpdate = async () => {
         try {
             const update = await Updates.checkForUpdateAsync();
@@ -168,11 +224,62 @@ export default function App() {
                         }}>
                         <View style={styles.centeredView}>
                             <View style={styles.modalView}>
-                                <Text style={styles.modalText}>Hello World!</Text>
+                                <Text style={styles.modalText}>Stream Goal</Text>
+                                <View style={styles.container}>
+                                    <Text>Display Status</Text>
+                                    <Switch
+                                        trackColor={{ false: "#767577", true: "#81b0ff" }}
+                                        thumbColor={isEnabled ? "#f5dd4b" : "#f4f3f4"}
+                                        ios_backgroundColor="#3e3e3e"
+                                        onValueChange={toggleSwitch}
+                                        value={isEnabled}
+                                    />
+                                </View>
+                                <Text>Yes Goal</Text>
+                                <SafeAreaView style={styles.inputContainer}>
+                                    <TextInput
+                                        style={styles.input}
+                                        onChangeText={onChangeNumber}
+                                        value={number}
+                                        placeholder="useless placeholder"
+                                        keyboardType="numeric"
+                                    />
+                                    <Text> / </Text>
+                                    <TextInput
+                                        style={styles.input}
+                                        onChangeText={onChangeNumber}
+                                        value={number}
+                                        placeholder="useless placeholder"
+                                        keyboardType="numeric"
+                                    />
+                                </SafeAreaView>
+                                <Text>No Goal</Text>
+                                <SafeAreaView style={styles.inputContainer}>
+                                    <TextInput
+                                        style={styles.input}
+                                        onChangeText={onChangeNumber}
+                                        value={number}
+                                        placeholder="useless placeholder"
+                                        keyboardType="numeric"
+                                    />
+                                    <Text> / </Text>
+                                    <TextInput
+                                        style={styles.input}
+                                        onChangeText={onChangeNumber}
+                                        value={number}
+                                        placeholder="useless placeholder"
+                                        keyboardType="numeric"
+                                    />
+                                </SafeAreaView>
                                 <Pressable
                                     style={[styles.button, styles.buttonClose]}
                                     onPress={() => setModalVisible(!modalVisible)}>
-                                    <Text style={styles.textStyle}>Hide Modal</Text>
+                                    <Text style={styles.textStyle}>Update</Text>
+                                </Pressable>
+                                <Pressable
+                                    style={[styles.button, styles.buttonClose]}
+                                    onPress={() => setModalVisible(!modalVisible)}>
+                                    <Text style={styles.textStyle}>Cancel</Text>
                                 </Pressable>
                             </View>
                         </View>
@@ -209,6 +316,7 @@ const styles = StyleSheet.create({
         margin: 20,
         backgroundColor: 'white',
         borderRadius: 20,
+        borderWidth: 1,
         padding: 35,
         alignItems: 'center',
         shadowColor: '#000',
@@ -240,4 +348,19 @@ const styles = StyleSheet.create({
         marginBottom: 15,
         textAlign: 'center',
     },
+    label: {
+        margin: 8,
+    },
+    input: {
+        height: 40,
+        margin: 12,
+        width: 40,
+        borderWidth: 1,
+        padding: 10,
+    },
+    inputContainer: {
+        flex: 1,
+        flexDirection: "row",
+        alignItems: "center",
+    }
 });
