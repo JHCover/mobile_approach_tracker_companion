@@ -4,104 +4,30 @@ import React, {useState, useEffect, useRef} from 'react';
 import * as Updates from "expo-updates";
 import { io } from "socket.io-client";
 
+const socket = io("ws://192.168.0.213:3000");
 
 export default function App() {
-    const [yesCount, setYesCount] = useState(0);
-    const [noCount, setNoCount] = useState(0);
     const [modalVisible, setModalVisible] = useState(false);
-    const [noGoal, setNoGoal] = useState(0)
-    const [yesGoal, setYesGoal] = useState(0)
-
-    const [newYesGoal, setNewYesGoal] = useState(0)
-    const [newNoGoal, setNewNoHoal] = useState(0)
-
-    const [yesGoalCount, setYesGoalCount] = useState(0)
-    const [noGoalCount, setNoGoalCount] = useState(0)
-
-    const [isEnabled, setIsEnabled] = useState(false);
-    const toggleSwitch = () => setIsEnabled(previousState => !previousState);
-
-    const [streamGoalActive, setStreamGoalActive] = useState(false)
-
-    const [number, onChangeNumber] = React.useState(null);
-
+    const toggleSwitch = () => setDisplayGoal(previousState => !previousState);
+    const [displayGoal, setDisplayGoal] = useState(null)
+    const [streamGoal, setStreamGoal] = useState(null);
+    const [streamGoalProgress, setStreamGoalProgress] = useState(null);
     const [pitchStats, setPitchStats] = useState({})
 
-    const socket = io("ws://192.168.0.213:3000");
 
 
     useEffect(() => {
-
-       // send a message to the server
+       // recieve initial data load
        socket.on("initial", (stats) => {
            console.log("initialStats", stats)
            setPitchStats(stats[0])
        });
-
-       // receive a message from the server
-       socket.emit("updateBackend", (...args) => {
-
-       });
-
+       // receive a brodcast update
        socket.on("statsUpdate", (update) => {
            setPitchStats(update)
        })
    }, [])
 
-    const sendHeartbeat = () => {
-        const payload = {
-            action: 'message',
-            type: 'heartbeat'
-        }
-        console.log("heartbeat sent")
-        socket.current.send(JSON.stringify(payload))
-
-    }
-
-    const getInitialValues = () => {
-        const payload = {
-            action: 'message',
-            type: 'getInitialValues'
-        }
-        socket.current.send(JSON.stringify(payload))
-
-    }
-
-    const changeStreamGoals = (newNoGoal, newYesGoal) => {
-        const payload = {
-            action: 'message',
-            type: 'setStreamGoalCounts',
-            streamGoal: {
-                newNoGoal,
-                newYesGoal,
-            }
-        }
-        socket.current.send(JSON.stringify(payload))
-    }
-
-    const changeStreamGoalCounts = (newNoGoalCount, newYesGoalCount) => {
-        const payload = {
-            action: 'message',
-            type: 'resetStreamGoalCounts',
-            streamGoal: {
-                streamGoalActive,
-                newNoGoalCount,
-                newYesGoalCount,
-            }
-        }
-        socket.current.send(JSON.stringify(payload))
-    }
-
-    const changeStreamGoalActive = () => {
-        const payload = {
-            action: 'message',
-            type: 'setStreamGoalActive',
-            streamGoal: {
-                streamGoalActive,
-            }
-        }
-        socket.current.send(JSON.stringify(payload))
-    }
 
     const addYesButtonPress = async () => {
         let statsUpdate = {...pitchStats}
@@ -111,30 +37,38 @@ export default function App() {
 
 
     const minusYesButtonPress = () => {
-        console.log("decreaseYesButton")
-        const payload = {
-            action: 'message',
-            type: 'decreaseYes'
-        }
-        socket.current.send(JSON.stringify(payload))
+        let statsUpdate = {...pitchStats}
+        statsUpdate.yesCount--;
+        socket.send(statsUpdate)
     }
 
     const addNoButtonPress = () => {
-        console.log("increaseNoButton")
-        const payload = {
-            action: 'message',
-            type: 'increaseNo'
-        }
-        socket.current.send(JSON.stringify(payload))
+        let statsUpdate = {...pitchStats}
+        statsUpdate.noCount++;
+        socket.send(statsUpdate)
     }
 
     const minusNoButtonPress = () => {
-        console.log("decreaseMinusButton")
-        const payload = {
-            action: 'message',
-            type: 'decreaseNo'
-        }
-        socket.current.send(JSON.stringify(payload))
+        let statsUpdate = {...pitchStats}
+        statsUpdate.noCount--;
+        socket.send(statsUpdate)
+    }
+
+    const openModal = () => {
+        setModalVisible(true)
+        // Set goal and progress update numbers to whatever came from backend last
+        setStreamGoalProgress(pitchStats.streamGoalProgress)
+        setStreamGoal(pitchStats.streamGoal)
+        setDisplayGoal(pitchStats.displayGoal)
+    }
+
+    const sendGoalUpdate = () => {
+        let statsUpdate = {...pitchStats}
+        statsUpdate.streamGoal = streamGoal;
+        statsUpdate.streamGoalProgress = streamGoalProgress;
+        statsUpdate.displayGoal = displayGoal
+        socket.send(statsUpdate)
+        setModalVisible(false)
     }
 
     const handleCheckForUpdate = async () => {
@@ -184,8 +118,13 @@ export default function App() {
                 </View>
                 <Text>Number of Yes's: {pitchStats && pitchStats.yesCount}</Text>
                 <Text>Number of No's: {pitchStats && pitchStats.noCount}</Text>
+                {pitchStats.displayGoal ?
+                    <Text>Stream Goal: {pitchStats && pitchStats.streamGoalProgress} / {pitchStats && pitchStats.streamGoal}</Text>
+                    :
+                    <></>
+                }
             </View>
-            <Pressable style={[styles.button, styles.buttonOpen]} onPress={() => setModalVisible(true)}>
+            <Pressable style={[styles.button, styles.buttonOpen]} onPress={() => openModal()}>
                 <Text style={styles.textStyle}>Show Modal</Text>
             </Pressable>
             <View style={{
@@ -210,51 +149,32 @@ export default function App() {
                                 <Text>Display Status</Text>
                                 <Switch
                                     trackColor={{ false: "#767577", true: "#81b0ff" }}
-                                    thumbColor={isEnabled ? "#f5dd4b" : "#f4f3f4"}
+                                    thumbColor={displayGoal ? "#f5dd4b" : "#f4f3f4"}
                                     ios_backgroundColor="#3e3e3e"
                                     onValueChange={toggleSwitch}
-                                    value={isEnabled}
+                                    value={displayGoal}
                                 />
                             </View>
-                            <Text>Yes Goal</Text>
+                            <Text>Stream Goal</Text>
                             <SafeAreaView style={styles.inputContainer}>
                                 <TextInput
                                     style={styles.input}
-                                    onChangeText={onChangeNumber}
-                                    value={number}
-                                    placeholder="useless placeholder"
+                                    onChangeText={setStreamGoalProgress}
+                                    value={streamGoalProgress}
                                     keyboardType="numeric"
                                 />
                                 <Text> / </Text>
                                 <TextInput
                                     style={styles.input}
-                                    onChangeText={onChangeNumber}
-                                    value={number}
-                                    placeholder="useless placeholder"
-                                    keyboardType="numeric"
-                                />
-                            </SafeAreaView>
-                            <Text>No Goal</Text>
-                            <SafeAreaView style={styles.inputContainer}>
-                                <TextInput
-                                    style={styles.input}
-                                    onChangeText={onChangeNumber}
-                                    value={number}
-                                    placeholder="useless placeholder"
-                                    keyboardType="numeric"
-                                />
-                                <Text> / </Text>
-                                <TextInput
-                                    style={styles.input}
-                                    onChangeText={onChangeNumber}
-                                    value={number}
-                                    placeholder="useless placeholder"
+                                    onChangeText={setStreamGoal}
+                                    value={streamGoal}
                                     keyboardType="numeric"
                                 />
                             </SafeAreaView>
                             <Pressable
                                 style={[styles.button, styles.buttonClose]}
-                                onPress={() => setModalVisible(!modalVisible)}>
+                                onPress={sendGoalUpdate}
+                            >
                                 <Text style={styles.textStyle}>Update</Text>
                             </Pressable>
                             <Pressable
