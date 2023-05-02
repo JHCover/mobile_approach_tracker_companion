@@ -4,7 +4,7 @@ import React, {useState, useEffect, useRef} from 'react';
 import * as Updates from "expo-updates";
 import { io } from "socket.io-client";
 
-const socket = io("ws://192.168.0.213:3000");
+const socket = io("ws://68.183.125.91:3000");
 
 export default function App() {
     const [modalVisible, setModalVisible] = useState(false);
