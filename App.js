@@ -32,12 +32,18 @@ export default function App() {
     const addYesButtonPress = async () => {
         let statsUpdate = {...pitchStats}
         statsUpdate.yesCount++;
+        if (statsUpdate.displayGoal) {
+            statsUpdate.streamGoalProgress++
+        }
         socket.send(statsUpdate)
     }
 
 
     const minusYesButtonPress = () => {
         let statsUpdate = {...pitchStats}
+        if (statsUpdate.displayGoal) {
+            statsUpdate.streamGoalProgress--
+        }
         statsUpdate.yesCount--;
         socket.send(statsUpdate)
     }
@@ -45,11 +51,17 @@ export default function App() {
     const addNoButtonPress = () => {
         let statsUpdate = {...pitchStats}
         statsUpdate.noCount++;
+        if (statsUpdate.displayGoal) {
+            statsUpdate.streamGoalProgress++
+        }
         socket.send(statsUpdate)
     }
 
     const minusNoButtonPress = () => {
         let statsUpdate = {...pitchStats}
+        if (statsUpdate.displayGoal) {
+            statsUpdate.streamGoalProgress--
+        }
         statsUpdate.noCount--;
         socket.send(statsUpdate)
     }
