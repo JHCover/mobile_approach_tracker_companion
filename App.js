@@ -1,8 +1,20 @@
 import {StatusBar} from 'expo-status-bar';
-import {StyleSheet, Text, Button, TouchableOpacity, Alert, Modal, Pressable, View, Switch,  SafeAreaView, TextInput} from 'react-native';
+import {
+    StyleSheet,
+    Text,
+    Button,
+    TouchableOpacity,
+    Alert,
+    Modal,
+    Pressable,
+    View,
+    Switch,
+    SafeAreaView,
+    TextInput
+} from 'react-native';
 import React, {useState, useEffect, useRef} from 'react';
 import * as Updates from "expo-updates";
-import { io } from "socket.io-client";
+import {io} from "socket.io-client";
 
 const socket = io("ws://68.183.125.91:3000");
 
@@ -15,18 +27,17 @@ export default function App() {
     const [pitchStats, setPitchStats] = useState({})
 
 
-
     useEffect(() => {
-       // recieve initial data load
-       socket.on("initial", (stats) => {
-           console.log("initialStats", stats)
-           setPitchStats(stats[0])
-       });
-       // receive a brodcast update
-       socket.on("statsUpdate", (update) => {
-           setPitchStats(update)
-       })
-   }, [])
+        // recieve initial data load
+        socket.on("initial", (stats) => {
+            console.log("initialStats", stats)
+            setPitchStats(stats[0])
+        });
+        // receive a brodcast update
+        socket.on("statsUpdate", (update) => {
+            setPitchStats(update)
+        })
+    }, [])
 
 
     const addYesButtonPress = async () => {
@@ -111,27 +122,30 @@ export default function App() {
                 <View style={{
                     flex: 1,
                     margin: 15,
-                    justifyContent: 'center',
+                    justifyContent: 'space-around',
                     alignItems: 'center',
-                    flexDirection: 'row'
+                    flexDirection: 'row',
+                    width: "100%",
                 }}>
+                    <Button style={styles.pitchButton} onPress={minusYesButtonPress} title={"Minus Yes"}></Button>
                     <Button onPress={addYesButtonPress} title={"Plus Yes"}></Button>
-                    <Button onPress={minusYesButtonPress} title={"Minus Yes"}></Button>
                 </View>
                 <View style={{
+                    width: "100%",
                     flex: 1,
                     margin: 15,
-                    justifyContent: 'center',
+                    justifyContent: 'space-around',
                     alignItems: 'center',
                     flexDirection: 'row'
                 }}>
+                    <Button large onPress={minusNoButtonPress} title={"Minus No"}></Button>
                     <Button onPress={addNoButtonPress} title={"Plus No"}></Button>
-                    <Button onPress={minusNoButtonPress} title={"Minus No"}></Button>
                 </View>
-                <Text>Number of Yes's: {pitchStats && pitchStats.yesCount}</Text>
-                <Text>Number of No's: {pitchStats && pitchStats.noCount}</Text>
+                <Text style={{fontSize: 24,}}>Number of No's: {pitchStats && pitchStats.noCount}</Text>
+                <Text style={{fontSize: 24,}}>Number of Yes's: {pitchStats && pitchStats.yesCount}</Text>
                 {pitchStats.displayGoal ?
-                    <Text>Stream Goal: {pitchStats && pitchStats.streamGoalProgress} / {pitchStats && pitchStats.streamGoal}</Text>
+                    <Text style={{fontSize: 24,}}>Stream
+                        Goal: {pitchStats && pitchStats.streamGoalProgress} / {pitchStats && pitchStats.streamGoal}</Text>
                     :
                     <></>
                 }
@@ -160,7 +174,7 @@ export default function App() {
                             <View style={styles.container}>
                                 <Text>Display Status</Text>
                                 <Switch
-                                    trackColor={{ false: "#767577", true: "#81b0ff" }}
+                                    trackColor={{false: "#767577", true: "#81b0ff"}}
                                     thumbColor={displayGoal ? "#f5dd4b" : "#f4f3f4"}
                                     ios_backgroundColor="#3e3e3e"
                                     onValueChange={toggleSwitch}
@@ -183,17 +197,26 @@ export default function App() {
                                     keyboardType="numeric"
                                 />
                             </SafeAreaView>
-                            <Pressable
-                                style={[styles.button, styles.buttonClose]}
-                                onPress={sendGoalUpdate}
-                            >
-                                <Text style={styles.textStyle}>Update</Text>
-                            </Pressable>
-                            <Pressable
-                                style={[styles.button, styles.buttonClose]}
-                                onPress={() => setModalVisible(!modalVisible)}>
-                                <Text style={styles.textStyle}>Cancel</Text>
-                            </Pressable>
+                            <View style={{
+                                width: "100%",
+                                flex: 1,
+                                margin: 15,
+                                justifyContent: 'space-around',
+                                alignItems: 'center',
+                                flexDirection: 'row'
+                            }}>
+                                <Pressable
+                                    style={[styles.button, styles.buttonClose]}
+                                    onPress={sendGoalUpdate}
+                                >
+                                    <Text style={styles.textStyle}>Update</Text>
+                                </Pressable>
+                                <Pressable
+                                    style={[styles.button, styles.buttonClose]}
+                                    onPress={() => setModalVisible(!modalVisible)}>
+                                    <Text style={styles.textStyle}>Cancel</Text>
+                                </Pressable>
+                            </View>
                         </View>
                     </View>
                 </Modal>
@@ -243,8 +266,11 @@ const styles = StyleSheet.create({
     },
     button: {
         borderRadius: 20,
+        margin: 24,
         padding: 10,
+        width: 100,
         elevation: 2,
+
     },
     buttonOpen: {
         backgroundColor: '#F194FF',
@@ -275,5 +301,10 @@ const styles = StyleSheet.create({
         flex: 1,
         flexDirection: "row",
         alignItems: "center",
+    },
+    pitchButton: {
+        height: 200,
+        margin: 12,
+        width: 40,
     }
 });
